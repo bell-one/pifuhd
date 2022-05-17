@@ -24,7 +24,7 @@ resolution = str(args.resolution)
 
 start_id = -1
 end_id = -1
-cmd = ['--dataroot', args.input_path, '--results_path', args.out_path,\
+cmd = ['--dataroot', args.input_path, '--vton_path', args.vton_path, '--results_path', args.out_path,\
        '--loadSize', '1024', '--resolution', resolution, '--load_netMR_checkpoint_path', \
        args.ckpt_path,\
        '--start_id', '%d' % start_id, '--end_id', '%d' % end_id]
