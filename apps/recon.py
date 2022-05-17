@@ -150,12 +150,14 @@ def recon(opt, use_rect=False):
         state_dict = torch.load(state_dict_path, map_location=cuda)    
         print('Warning: opt is overwritten.')
         dataroot = opt.dataroot
+        vton_path = opt.vton_path
         resolution = opt.resolution
         results_path = opt.results_path
         loadSize = opt.loadSize
         
         opt = state_dict['opt']
         opt.dataroot = dataroot
+        opt.vton_path = vton_path
         opt.resolution = resolution
         opt.results_path = results_path
         opt.loadSize = loadSize
