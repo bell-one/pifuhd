@@ -84,6 +84,7 @@ def gen_mesh(res, net, cuda, data, save_path, thresh=0.5, use_octree=True, compo
 def gen_mesh_imgColor(res, net, cuda, data, save_path, thresh=0.5, use_octree=True, components=False):
     image_tensor_global = data['img_512'].to(device=cuda)
     image_tensor = data['img'].to(device=cuda)
+    vton_image_tensor = data['vton_img'].to(device=cuda)
     calib_tensor = data['calib'].to(device=cuda)
 
     net.filter_global(image_tensor_global)
@@ -115,7 +116,7 @@ def gen_mesh_imgColor(res, net, cuda, data, save_path, thresh=0.5, use_octree=Tr
         # if this returns error, projection must be defined somewhere else
         xyz_tensor = net.projection(verts_tensor, calib_tensor[:1])
         uv = xyz_tensor[:, :2, :]
-        color = index(image_tensor[:1], uv).detach().cpu().numpy()[0].T
+        color = index(vton_image_tensor[:1], uv).detach().cpu().numpy()[0].T
         color = color * 0.5 + 0.5
 
         if 'calib_world' in data:
