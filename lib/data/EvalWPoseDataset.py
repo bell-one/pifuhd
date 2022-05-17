@@ -144,6 +144,7 @@ class EvalWPoseDataset(Dataset):
 
         self.root = self.opt.dataroot
         self.img_files = sorted([os.path.join(self.root,f) for f in os.listdir(self.root) if f.split('.')[-1] in ['png', 'jpeg', 'jpg', 'PNG', 'JPG', 'JPEG'] and os.path.exists(os.path.join(self.root,f.replace('.%s' % (f.split('.')[-1]), '_keypoints.json')))])
+        self.vton_files = sorted([os.path.join(self.opt.vton_path,f) for f in os.listdir(self.opt.vton_path) if f.split('.')[-1] in ['png', 'jpeg', 'jpg', 'PNG', 'JPG', 'JPEG'] and os.path.exists(os.path.join(self.root,f.replace('.%s' % (f.split('.')[-1]), '_keypoints.json')))])
         self.IMG = os.path.join(self.root)
 
         self.phase = 'val'
@@ -177,6 +178,7 @@ class EvalWPoseDataset(Dataset):
 
     def get_item(self, index):
         img_path = self.img_files[index]
+        vton_path = self.vton_files[index]
         joint_path = self.img_files[index].replace('.%s' % (self.img_files[index].split('.')[-1]), '_keypoints.json')
         # Name
         img_name = os.path.splitext(os.path.basename(img_path))[0]
@@ -229,11 +231,17 @@ class EvalWPoseDataset(Dataset):
                 print('Waring: not sufficient keypoints.')
 
         im = cv2.imread(img_path, cv2.IMREAD_UNCHANGED)
+        vton_im = cv2.imread(vton_path, cv2.IMREAD_UNCHANGED)
         if im.shape[2] == 4:
             im = im / 255.0
             im[:,:,:3] /= im[:,:,3:] + 1e-8
             im = im[:,:,3:] * im[:,:,:3] + 0.5 * (1.0 - im[:,:,3:])
             im = (255.0 * im).astype(np.uint8)
+        if vton_im.shape[2] == 4:
+            vton_im = vton_im / 255.0
+            vton_im[:,:,:3] /= vton_im[:,:,3:] + 1e-8
+            vton_im = vton_im[:,:,3:] * vton_im[:,:,:3] + 0.5 * (1.0 - vton_im[:,:,3:])
+            vton_im = (255.0 * vton_im).astype(np.uint8)
         h, w = im.shape[:2]
         
         intrinsic = np.identity(4)
@@ -242,6 +250,7 @@ class EvalWPoseDataset(Dataset):
         rect = self.crop_func(keypoints)
 
         im = crop_image(im, rect)
+        vton_im = crop_image(vton_im, rect)
 
         scale_im2ndc = 1.0 / float(w // 2)
         scale = w / rect[2]
@@ -253,9 +262,11 @@ class EvalWPoseDataset(Dataset):
         intrinsic = np.matmul(trans_mat, intrinsic)
         im_512 = cv2.resize(im, (512, 512))
         im = cv2.resize(im, (self.load_size, self.load_size))
+        vton_im = cv2.resize(vton_im, (self.load_size, self.load_size))
 
         image_512 = Image.fromarray(im_512[:,:,::-1]).convert('RGB')
         image = Image.fromarray(im[:,:,::-1]).convert('RGB')
+        vton_image = Image.fromarray(vton_im[:,:,::-1]).convert('RGB')
         
         B_MIN = np.array([-1, -1, -1])
         B_MAX = np.array([1, 1, 1])
@@ -268,9 +279,11 @@ class EvalWPoseDataset(Dataset):
         # image
         image_512 = self.to_tensor(image_512)
         image = self.to_tensor(image)
+        vton_image = self.to_tensor(vton_image)
         return {
             'name': img_name,
             'img': image.unsqueeze(0),
+            'vton_img': vton_image.unsqueeze(0),
             'img_512': image_512.unsqueeze(0),
             'calib': calib.unsqueeze(0),
             'calib_world': calib_world.unsqueeze(0),
