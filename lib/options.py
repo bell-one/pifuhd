@@ -14,6 +14,9 @@ class BaseOptions():
         g_data.add_argument('--dataset', type=str, default='renderppl', help='dataset name')
         g_data.add_argument('--dataroot', type=str, default='./data',
                             help='path to images (data folder)')
+        g_data.add_argument('--vton_path', type=str, default='./data',
+                            help='path to vton image (data folder)')
+
 
         g_data.add_argument('--loadSize', type=int, default=512, help='load size of input image')
 
